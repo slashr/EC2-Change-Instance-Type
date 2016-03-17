@@ -3,40 +3,47 @@ import time
 import sys
 
 instance = boto3.client('ec2')
-instance_type = sys.argv[1]
+
+#Command Line arguments
+instance_id = sys.argv[1]
+instance_type = sys.argv[2]
+
 
 def stop_instance():
-	instance.stop_instances(InstanceIds=['i-c7755963'])
-	#while stop_response['StoppingInstances'][0]['CurrentState']['Name']!='stopped':
-	#instance_status = instance.describe_instance_status(InstanceIds=['i-c7755963'])
-
-	#print instance_status
-	#while instance_status['InstanceStatuses'][0]['InstanceState']['Name']!='stopped':
-	#	print "Instance State:"
-	#	instance_status = instance.describe_instance_status(InstanceIds=['i-c7755963'])
-	#	print instance_status
-	#	time.sleep(5)
-	#	continue
-
+	instance.stop_instances(InstanceIds=[instance_id])
 
 def change_instance_type():
-	modify_response = instance.modify_instance_attribute(InstanceId='i-c7755963', InstanceType={'Value':instance_type})
-
+	modify_response = instance.modify_instance_attribute(InstanceId=instance_id, InstanceType={'Value':instance_type})
 
 def start_instance():
-	start_response = instance.start_instances(InstanceIds=['i-c7755963'])
-	#while start_response['StartingInstances'][0]['CurrentState']['Name']!='running':
+	start_response = instance.start_instances(InstanceIds=[instance_id])
 
-	#while instance.describe_instance_status(InstanceIds=['i-c7755963'])!='running':
-	#	print "Instance State"
-	#	print instance.describe_instance_status(InstanceIds=['i-c7755963'])
-	#	time.sleep(5)
-	#	continue
+def instance_status():
+	status_response = instance.describe_instance_status(InstanceIds=[instance_id])
+	#Using this hack since describe_instance_status() is not returning "stopped" status when instance is stopped
+	if status_response['InstanceStatuses'] == []:
+		instance_status = "stopped"
+	#Here describe_instance_status() is returning "running" state as it should be
+	else:
+		instance_status = status_response['InstanceStatuses'][0]['InstanceState']['Name']
+	return instance_status	
 
-
+ 
 stop_instance()
-time.sleep(30)
+#Waits until instance is completely stopped
+while instance_status() != 'stopped'
+	"Instance is being stopped..."
+	time.sleep(3)
+
+#Change instance type and waits for 5 seconds just to be on the safer side	
 change_instance_type()
 time.sleep(5)
+
 start_instance()
-print "Instance type changed successfully"
+
+#Waits until instance is running
+while instance_status() != 'running'
+	print "Waiting for instance to start..."
+	time.sleep(3)
+
+print "Instance type has been changed successfully"
