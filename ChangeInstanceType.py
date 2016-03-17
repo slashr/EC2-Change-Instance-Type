@@ -45,3 +45,4 @@ while instance_status() != 'running':
 	time.sleep(3)
 
 print "Instance type has been changed successfully"
+
