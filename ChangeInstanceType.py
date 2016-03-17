@@ -30,10 +30,8 @@ def instance_status():
 
  
 stop_instance()
-#Waits until instance is completely stopped
-while instance_status() != 'stopped'
-	"Instance is being stopped..."
-	time.sleep(3)
+#Using manual timeout since describe_instance_status isn't returing "stopped" statuses
+time.sleep(60)
 
 #Change instance type and waits for 5 seconds just to be on the safer side	
 change_instance_type()
@@ -42,7 +40,7 @@ time.sleep(5)
 start_instance()
 
 #Waits until instance is running
-while instance_status() != 'running'
+while instance_status() != 'running':
 	print "Waiting for instance to start..."
 	time.sleep(3)
 
