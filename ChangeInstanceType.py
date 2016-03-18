@@ -1,8 +1,10 @@
 import boto3
 import time
 import sys
+import datetime
 
 instance = boto3.client('ec2')
+handle = open('type_change_log.txt', 'a')
 
 #Command Line arguments
 instance_id = sys.argv[1]
@@ -28,21 +30,35 @@ def instance_status():
 		instance_status = status_response['InstanceStatuses'][0]['InstanceState']['Name']
 	return instance_status	
 
- 
-stop_instance()
-#Using manual timeout since describe_instance_status isn't returing "stopped" statuses
-time.sleep(60)
 
-#Change instance type and waits for 5 seconds just to be on the safer side	
-change_instance_type()
-time.sleep(5)
+timestamp = str(datetime.date.today())
+handle.write('\nDate: ')
+handle.write(timestamp)
+handle.write('\nStopping Instance\n')
 
-start_instance()
+try:
+
+	#Stops the instance and waits for 60 seconds. 
+	#Using manual timeout since describe_instance_status isn't returing "stopped" statuses
+	stop_instance()
+	time.sleep(60)
+
+	#Change instance type and waits for 5 seconds just to be on the safer side	
+	change_instance_type()
+	time.sleep(5)
+
+	start_instance()
+except:
+	e = sys.exc_info()[0]
+	handle.write('Error')+e
+
 
 #Waits until instance is running
 while instance_status() != 'running':
 	print "Waiting for instance to start..."
 	time.sleep(3)
 
-print "Instance type has been changed successfully"
+handle.write('Instance type has been changed successfully\n')
+handle.write('__________________________________________')
+handle.close()
 
